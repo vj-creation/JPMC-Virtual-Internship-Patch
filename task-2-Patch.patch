@@ -1,0 +1,139 @@
+From 7cb1d529ee35c22f72504e7948292f0ca2ac112c Mon Sep 17 00:00:00 2001
+From: VINEET <2018uec1733@mnit.ac.in>
+Date: Sat, 9 May 2020 10:44:39 +0530
+Subject: [PATCH] Create Patch File
+
+---
+ 0001-Update-README-setupv8.patch | 25 +++++++++++++++++++++++++
+ src/App.tsx                      | 22 ++++++++++++++++++----
+ src/Graph.tsx                    | 13 +++++++++++--
+ 3 files changed, 54 insertions(+), 6 deletions(-)
+ create mode 100644 0001-Update-README-setupv8.patch
+
+diff --git a/0001-Update-README-setupv8.patch b/0001-Update-README-setupv8.patch
+new file mode 100644
+index 0000000..a049a9c
+--- /dev/null
++++ b/0001-Update-README-setupv8.patch
+@@ -0,0 +1,25 @@
++From c8db81e2e786ff24ff6c256eb1307c44c16291dd Mon Sep 17 00:00:00 2001
++From: jbf-insidesherpa <54832297+jbf-insidesherpa@users.noreply.github.com>
++Date: Mon, 25 Nov 2019 09:32:31 +0800
++Subject: [PATCH] Update README (setupv8)
++
++---
++ README.md | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++diff --git a/README.md b/README.md
++index 6019f9b..8d2a7e4 100755
++--- a/README.md
+++++ b/README.md
++@@ -29,7 +29,7 @@ Implement JP Morgan Chase’s Perspective open source code in preparation for da
++ </ol>
++ 
++ <h2 id="installation" >Set up / Installation</h2>
++-<p>In order to get the server and client application code working on your machine, <a href="https://insidesherpa.s3.amazonaws.com/vinternships/companyassets/Sj7temL583QAYpHXD/setup_devenv_m2_v7.pdf">follow the setup here</a></p>
+++<p>In order to get the server and client application code working on your machine, <a href="https://insidesherpa.s3.amazonaws.com/vinternships/companyassets/Sj7temL583QAYpHXD/setup_devenv_m2_v8.pdf">follow the setup here</a></p>
++ 
++ <p><b>Note</b>:This is the version of the JPM 2 exercise that uses Python 3. The Python 2.7 version is in <a href="https://github.com/insidesherpa/JPMC-tech-task-2">this other repo</a></p>
++ 
++-- 
++2.24.1.windows.2
++
+diff --git a/src/App.tsx b/src/App.tsx
+index 0728518..78eca02 100755
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -8,6 +8,7 @@ import './App.css';
+  */
+ interface IState {
+   data: ServerRespond[],
++	showGraph: boolean,
+ }
+ 
+ /**
+@@ -22,6 +23,7 @@ class App extends Component<{}, IState> {
+       // data saves the server responds.
+       // We use this state to parse data down to the child element (Graph) as element property
+       data: [],
++showGraph: false,
+     };
+   }
+ 
+@@ -29,18 +31,30 @@ class App extends Component<{}, IState> {
+    * Render Graph react component with state.data parse as property data
+    */
+   renderGraph() {
++if(this.state.showGraph) {
+     return (<Graph data={this.state.data}/>)
+   }
+-
++}
+   /**
+    * Get new data from server and update the state with the new data
+    */
+   getDataFromServer() {
+-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
++    let x = 0;
++    const interval = setInterval(() => {
++      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+       // Update the state by creating a new array of data that consists of
+       // Previous data in the state and the new data from server
+-      this.setState({ data: [...this.state.data, ...serverResponds] });
+-    });
++     this.setState ({
++          data: serverResponds ,
++          showGraph: true ,
++        });
++      });
++      x++;
++      if (x > 1000)
++      {
++        clearInterval(interval);
++      } 
++    }, 100);
+   }
+ 
+   /**
+diff --git a/src/Graph.tsx b/src/Graph.tsx
+index ec1430e..d0f7b9e 100644
+--- a/src/Graph.tsx
++++ b/src/Graph.tsx
+@@ -14,7 +14,7 @@ interface IProps {
+  * Perspective library adds load to HTMLElement prototype.
+  * This interface acts as a wrapper for Typescript compiler.
+  */
+-interface PerspectiveViewerElement {
++interface PerspectiveViewerElement extends HTMLElement {
+   load: (table: Table) => void,
+ }
+ 
+@@ -32,7 +32,7 @@ class Graph extends Component<IProps, {}> {
+ 
+   componentDidMount() {
+     // Get element to attach the table from the DOM.
+-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
++    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+ 
+     const schema = {
+       stock: 'string',
+@@ -49,6 +49,15 @@ class Graph extends Component<IProps, {}> {
+ 
+       // Add more Perspective configurations here.
+       elem.load(this.table);
++ 	elem.setAttribute('view', 'y_line');
++      elem.setAttribute('column-pivots', '["stock"]');
++      elem.setAttribute('row-pivots', '["timestamp"]');
++      elem.setAttribute('columns','["top_ask_price"]');
++      elem.setAttribute('aggregates', `
++      {"stock": "discount count",
++      "top_ask_price":"avg",
++      "top_bid_price": "avg",
++      "timestamp":"distinct count"}`)
+     }
+   }
+ 
+-- 
+2.24.1.windows.2
+
